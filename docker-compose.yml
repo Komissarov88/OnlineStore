@@ -7,8 +7,6 @@ volumes:
 networks:
   postgres-network:
     driver: bridge
-  rabbitmq_go_net:
-    driver: bridge
 
 services:
   postgres:
@@ -25,16 +23,28 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgrespass
     ports:
-      - "5435:5432"
+      - "5432:5432"
 
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-    container_name: 'rabbitmq'
-    ports:
-      - 5672:5672
-      - 15672:15672
-    volumes:
-      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
-      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+  store-front:
+    build: ./store-front
+    container_name: store-front
     networks:
-      - rabbitmq_go_net
+      - postgres-network
+    ports:
+      - "8189:8189"
+
+  store-service:
+    build: ./store-service
+    container_name: store-service
+    networks:
+      - postgres-network
+    ports:
+      - "8190:8190"
+
+  eureka-server:
+    build: ./eureka-server
+    container_name: eureka-server
+    networks:
+      - postgres-network
+    ports:
+      - "8761:8761"
